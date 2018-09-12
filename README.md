@@ -177,3 +177,99 @@ function getArray() external pure returns(uint[]) {
 
 Remarque : Les tableaux mémoires doivent être créés avec un argument de longueur (dans cet exemple, 3). Ils ne peuvent pas encore être redimensionnés avec array.push(), mais cela pourrait changer dans les prochaines versions de Solidity.
 
+Rappels:
+Il existent des modificateurs de visibilité qui contrôlent quand et depuis où la fonction peut être appelée : private veut dire que la fonction ne peut être appelée que par les autres fonctions à l'intérieur du contrat; internal est comme private mais en plus, elle peut être appelée par les contrats qui héritent de celui-ci; avec external, la fonction ne peut être appelée que depuis l'extérieur du contrat; et enfin avec public, elle peut être appelée depuis n'importe où, à l'intérieur et à l'extérieur.
+
+Il existent aussi des modificateurs d'état, qui nous indiquent comment la fonction interagie avec la BlockChain : view nous indique qu'en exécutant cette fonction, aucune donnée ne saura sauvegardée/modifiée. pure nous indique que non seulement aucune donnée ne saura sauvée sur la BlockChain, mais qu'en plus aucune donnée de la BlockChain ne sera lue. Ces 2 fonctions ne coûtent pas de gas si elles sont appelées depuis l'extérieur du contrat (mais elle coûtent du gas si elles sont appelées intérieurement par une autre fonction).
+
+Ensuite nous avons les modificateurs personnalisés: modifier
+qui permettent de déterminer une logique personnalisée afin de choisir
+de quelle manière le modifier va affecter une fonction
+
+Le modificateur payable
+Une des choses qui rend Solidity et Ethereum vraiment cool est le modificateur payable, une fonction payable est une fonction spéciale qui peut recevoir des Ether.
+
+Réfléchissons une minute. Quand vous faites un appel à une fonction API sur un serveur normal, vous ne pouvez pas envoyer des dollars US en même temps - pas plus que des Bitcoin.
+
+Mais en Ethereum, puisque la monnaie (Ether), les données (charge utile de la transaction) et le code du contrat lui-même sont directement sur Ethereum, il est possible pour vous d'appeler une fonction et de payer le contrat en même temps.
+
+Cela permet un fonctionnement vraiment intéressant, comme demander un certain paiement au contrat pour pouvoir exécuter une fonction.
+
+Prenons un exemple
+contract OnlineStore {
+  function buySomething() external payable {
+    // Vérifie que 0.001 ether a bien été envoyé avec l'appel de la fonction :
+    require(msg.value == 0.001 ether);
+    // Si c'est le cas, transférer l'article digital au demandeur de la fonction :
+    transferThing(msg.sender);
+  }
+}
+
+Ici, msg.value est la façon de voir combien d'Ether ont été envoyés au contrat, et ether est une unité intégrée.
+Quelqu'un va appeler la fonction depuis web3.js (depuis l'interface utilisateur JavaScript de la DApp) de cette manière là :
+
+// En supposant que `OnlineStore` pointe vers le contrat Ethereum :
+OnlineStore.buySomething({from: web3.eth.defaultAccount, value: web3.utils.toWei(0.001)})
+
+On remarque le champs value (valeur), où l'appel de la fonction Javascript indique combien d'ether envoyer (0.001). Si vous imaginez la transaction comme une enveloppe, et les paramètres que vous envoyez à l'appel de la fonction comme étant la lettre que vous mettez à l'intérieur, alors ajouter value revient au même que d'ajouter du cash à l'intérieur de l'enveloppe - la lettre et l'argent vont être donné au même moment au destinataire.
+
+Remarque : Si une fonction n'est pas marquée payable et que vous essayez de lui envoyer des Ether, la fonction rejettera votre transaction.
+
+
+Après avoir envoyé des Ether à un contrat, ils sont stockés dans le compte Ethereum du contrat, et resteront ici - à part si vous ajoutez une fonction pour retirer les Ether du contrat.
+
+Vous pouvez écrire une fonction pour retirer des Ether du contrat de cette manière :
+
+contract GetPaid is Ownable {
+  function withdraw() external onlyOwner {
+    owner.transfer(this.balance);
+  }
+}
+Vous remarquerez que nous utilisons owner et onlyOwner du contrat Ownable, en supposant qu'il a été importé.
+
+Vous pouvez transférer des Ether à une adresse en utilisant la fonction transfer, et this.balance retournera la balance totale stockée sur le contrat. Si 100 utilisateurs ont payé 1 Ether à votre contrat, this.balance sera égal à 100 Ether.
+
+Vous pouvez utilisez transfer pour envoyer des fonds à n'importe quelle adresse Ethereum. Par exemple, vous pouvez avoir une fonction qui renvoie les Ether à msg.sender s'il paye trop cher pour un article :
+
+uint itemFee = 0.001 ether;
+msg.sender.transfer(msg.value - itemFee);
+Ou dans un contrat avec un acheteur et un vendeur, vous pouvez stocker l'adresse du vendeur, et quand quelqu'un achète son article, lui envoyer le montant payés par l'acheteur : seller.transfer(msg.value).
+
+Ce sont quelques exemples de ce qui rend la programmation Ethereum vraiment cool - vous pouvez avoir des marchés décentralisés qui ne sont contrôlés par personne.
+
+La génération de nombre aléatoire avec keccak256
+La meilleure source d'aléatoire que nous avons avec Solidity est la fonction de hachage keccak256.
+
+Pour générer un nombre aléatoire, nous pourrions faire quelque chose qui ressemble à :
+
+// Générer un nombre aléatoire entre 1 et 100 :
+uint randNonce = 0;
+uint random = uint(keccak256(now, msg.sender, randNonce)) % 100;
+randNonce++;
+uint random2 = uint(keccak256(now, msg.sender, randNonce)) % 100;
+Cela prendrait l'horodatage de now, le msg.sender, et incrémenterait nonce (un nombre qui est utilisé seulement une fois, pour ne pas exécuter la même fonction avec les même paramètres plusieurs fois).
+
+Ensuite, cela utilisera le keccak pour convertir ces paramètres en un hachage aléatoire, le convertir en un uint et utiliser % 100 pour prendre seulement les 2 derniers chiffres, afin d'avoir un nombre aléatoire entre 0 et 99.
+
+Cette méthode est vulnérable aux attaques d'un nœud malhonnête.
+En Ethereum, quand vous appelez la fonction d'un contrat, vous diffuser une transaction à un nœud ou à des nœuds du réseau. Les nœuds du réseau vont ensuite collecter plusieurs transactions, vont essayer d'être le premier à résoudre un problème mathématique qui demande un calcul intensif appelé "Proof of Work" (Preuve de Travail) ou PoW, et vont ensuite diffuser ce groupe de transactions avec leur PoW dans un bloc au reste du réseau.
+
+Quand un nœud a résolu un PoW, les autres nœuds arrêtent d'essayer de résoudre le PoW, ils vérifient que la liste des transactions de l'autre nœud soit valide, acceptent le bloc et passent à la résolution du bloc suivant.
+
+Cela rend notre fonction nombre aléatoire exploitable.
+
+Imaginez que nous avons un contrat pile ou face - face vous doublez votre argent, pile vous perdez tout. Et qu'il utilise la fonction ci-dessus pour déterminer si c'est pile ou face. (random >= 50 c'est face, random < 50 c'est pile).
+
+Si j'ai un nœud, je pourrais publier une transaction seulement à mon propre nœud et ne pas la partager. Je pourrais exécuter le code de la fonction pile ou face pour voir si j'ai gagné - et si je perds, choisir de ne pas ajouter cette transaction dans le prochain bloc que je résous. Je pourrais continuer indéfiniment jusqu'à ce que je gagne et résolve le bloc, et gagner de l'argent.
+
+Comment faire pour générer des nombres aléatoires de manière sûre sur Ethereum ?
+Parce que tout le contenu de la blockchain est visible de tous les participants, c'est un problème difficile, et la solution est au-delà du cadre de ce tutoriel. Vous pouvez lire Cette discussion https://ethereum.stackexchange.com/questions/191/how-can-i-securely-generate-a-random-number-in-my-smart-contract
+ pour vous faire une idée. Une des possibilités serait d'avoir un oracle pour avoir accès à une fonction aléatoire en dehors de la blockchain Ethereum.
+
+Bien sur, puisque des dizaine de milliers de nœuds Ethereum sur le réseau rivalisent pour résoudre le prochain bloc, mes chances de résoudre le prochain bloc sont vraiment faibles. Il me faudrait énormément de puissance de calcul et de temps pour réussir à l'exploiter - mais si la récompense est assez élevée (si je pouvais parier 100 000 000$ sur la fonction pile ou face), cela vaudrait la peine de l'attaquer.
+
+Même si cette fonction aléatoire N'EST PAS sécurisée sur Ethereum, en pratique, à part si notre fonction aléatoire a beaucoup d'argent en jeu, les utilisateurs de votre jeu n'auront sûrement pas assez de ressources pour l'attaquer.
+
+Puisque nous construisons simplement un jeu à des fin de démonstration dans ce tutoriel, et qu'il n'y a pas vraiment d'argent en jeu, nous allons accepter les compromis d'utiliser un générateur de nombre aléatoire simple à implémenter, sachant qu'il n'est pas totalement sûr.
+
+Dans une prochaine leçon, il se peut que nous voyons comment utiliser des oracles (un moyen sécurisé de récupérer des données en dehors d'Ethereum) pour générer une fonction aléatoire depuis l'extérieur de la blockchain.

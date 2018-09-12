@@ -33,6 +33,13 @@ contract ZombieFeeding is ZombieFactory {
     //address ckAddress = 0x06012c8cf97BEaD5deAe237070F9587f8E7A266d;//c'est l'adresse du contrat CryptoKitties
     KittyInterface kittyContract;// = KittyInterface(ckAddress);//on instancie le contrat CryptoKitties à l'aide de son adresse et de son interface
 
+    //modifier dont on fera hériter les fonctions dans lesquelles nous devons
+    //vérifier que le zombie spécifié appartient bien au user
+    modifier ownerOf(uint _zombieId) {
+        require (msg.sender == zombieToOwner[_zombieId]);
+        _;
+    }
+
     function setKittyContractAddress(address _address) external onlyOwner {
         kittyContract = KittyInterface(_address);
     }
@@ -86,8 +93,10 @@ contract ZombieFeeding is ZombieFactory {
         return (_zombie.readyTime <= now);
     }
     
-    function feedAndMultiply(uint _zombieId, uint _targetDna, string _species) internal {
-        require(zombieToOwner[_zombieId] == msg.sender);//on ne peut nourrir que son propre zombie
+    function feedAndMultiply(uint _zombieId, uint _targetDna, string _species) internal ownerOf(_zombieId) {
+        //la ligne suivante n'est plus nécessaire car on a hérité du modifier ownerOf
+        //require(zombieToOwner[_zombieId] == msg.sender);//on ne peut nourrir que son propre zombie
+        
         Zombie storage myZombie = zombies[_zombieId];//on créé une instance du zombie à nourrir
         require(_isReady(myZombie));
         uint newTargetDna = _targetDna % dnaModulus;//on s'assure que l'adn de la cible ne fait pas plus de 16 chiffres

@@ -20,6 +20,8 @@ contract ZombieFactory is Ownable{
         uint dna;
         uint32 level;
         uint32 readyTime;//time to wait before attack/feed again
+        uint16 winCount;
+        uint16 lossCount;//uint16 = 2^16 => max 65536, largement suffisant sachant qu'on peut attaquer une fois par jour
     }
 
     Zombie[] public zombies;
@@ -50,7 +52,7 @@ contract ZombieFactory is Ownable{
     //external en revanche est comme public MAIS ne peut être appelé qu'en dehors du contrat
     function _createZombie(string _name, uint _dna) internal {
         require(ownerZombieCount[msg.sender] == 0);//pour pouvoir exécuter cette fonction, il faut que le user ait 0 zombie
-        uint id = zombies.push(Zombie(_name, _dna,1,uint32(now + coolDownTime))) - 1;
+        uint id = zombies.push(Zombie(_name, _dna,1,uint32(now + coolDownTime), 0, 0)) - 1;
         /*
         now + cooldownTime sera égal à l'horodatage unix actuel 
         (en secondes) plus le nombre de secondes d'un jour
