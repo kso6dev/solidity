@@ -30,9 +30,12 @@ contract KittyInterface {
 //un contrat peut hériter d'un autre contrat et donc y accéder
 contract ZombieFeeding is ZombieFactory {
 
-    address ckAddress = 0x06012c8cf97BEaD5deAe237070F9587f8E7A266d;//c'est l'adresse du contrat CryptoKitties
-    KittyInterface kittyContract = KittyInterface(ckAddress);//on instancie le contrat CryptoKitties à l'aide de son adresse et de son interface
+    //address ckAddress = 0x06012c8cf97BEaD5deAe237070F9587f8E7A266d;//c'est l'adresse du contrat CryptoKitties
+    KittyInterface kittyContract;// = KittyInterface(ckAddress);//on instancie le contrat CryptoKitties à l'aide de son adresse et de son interface
 
+    function setKittyContractAddress(address _address) external onlyOwner {
+        kittyContract = KittyInterface(_address);
+    }
     /*
     En Solidity, il y a deux endroits pour stocker les variables - dans le storage (stockage) ou dans la memory (mémoire).
     Le stockage est utilisé pour les variables stockées de manière permanente dans la blockchain. 
@@ -74,11 +77,21 @@ contract ZombieFeeding is ZombieFactory {
     }
     */
 
-    function feedAndMultiply(uint _zombieId, uint _targetDna, string _species) public {
+    //on peut passer un pointeur de stockage d'une structure en param d'une fonction:
+    function _triggerCooldown(Zombie storage _zombie) internal {
+        _zombie.readyTime = uint32(now + coolDownTime);
+    }
+
+    function _isReady(Zombie storage _zombie) internal view returns (bool) {
+        return (_zombie.readyTime <= now);
+    }
+    
+    function feedAndMultiply(uint _zombieId, uint _targetDna, string _species) internal {
         require(zombieToOwner[_zombieId] == msg.sender);//on ne peut nourrir que son propre zombie
         Zombie storage myZombie = zombies[_zombieId];//on créé une instance du zombie à nourrir
-        _targetDna = _targetDna % dnaModulus;//on s'assure que l'adn de la cible ne fait pas plus de 16 chiffres
-        uint newDna = (_targetDna + myZombie.dna) / 2;//on fait la moyenne des 2 adn
+        require(_isReady(myZombie));
+        uint newTargetDna = _targetDna % dnaModulus;//on s'assure que l'adn de la cible ne fait pas plus de 16 chiffres
+        uint newDna = (newTargetDna + myZombie.dna) / 2;//on fait la moyenne des 2 adn
         
         //si on mange un kitty, on change l'adn pour qu'il finisse par 99
         //ATTENTION pour comparer 2 strings on compare toujours leurs hachages keccak256
@@ -90,6 +103,7 @@ contract ZombieFeeding is ZombieFactory {
             //donc on retire 56 à dna et on ajoute 99
         }
         _createZombie("NoName", newDna);
+        _triggerCooldown(myZombie);
     }
 
     function feedOnKitty(uint _zombieId, uint _kittyId) public {

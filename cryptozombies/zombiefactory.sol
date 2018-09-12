@@ -3,18 +3,23 @@ pragma solidity ^0.4.17;
 //mon premier zombie:
 //https://share.cryptozombies.io/fr/lesson/1/share/soseji
 
+import "./ownable.sol";
+
 //un contrat est situé dans une blockchain et ses fonctions peuvent être appelées par un user qui possède une adresse (wallet)
-contract ZombieFactory {
+contract ZombieFactory is Ownable{
 
     event NewZombie(uint zombieId, string name, uint dna);//event auquel on pourra s'abonner côté front end
 
     uint dnaDigits = 16; 
     uint dnaModulus = 10 ** dnaDigits;
+    uint coolDownTime = 1 days;//default time to wait before attack/feed again
 
     //une structure est l'équivalent d'une classe
     struct Zombie {
         string name;
         uint dna;
+        uint32 level;
+        uint32 readyTime;//time to wait before attack/feed again
     }
 
     Zombie[] public zombies;
@@ -42,9 +47,18 @@ contract ZombieFactory {
     la seule manière pour quelqu'un de modifier les données d'un autre serait de lui voler sa clé privée associée à son adresse Ethereum.
     */
     //une fonction internal est accessbile par les filles (protected)
+    //external en revanche est comme public MAIS ne peut être appelé qu'en dehors du contrat
     function _createZombie(string _name, uint _dna) internal {
         require(ownerZombieCount[msg.sender] == 0);//pour pouvoir exécuter cette fonction, il faut que le user ait 0 zombie
-        uint id = zombies.push(Zombie(_name, _dna)) - 1;
+        uint id = zombies.push(Zombie(_name, _dna,1,uint32(now + coolDownTime))) - 1;
+        /*
+        now + cooldownTime sera égal à l'horodatage unix actuel 
+        (en secondes) plus le nombre de secondes d'un jour
+        qui sera égal à l'horodatage unix dans 24h. 
+        Plus tard, nous pourrons comparer si le readyTime du zombie 
+        est supérieur à now pour voir si assez de temps s'est écoulé 
+        pour utiliser le zombie à nouveau.
+        */
         zombieToOwner[id] = msg.sender;//on met à jour le mapping zombieToWoner pour associer l'adresse de celui qui créé le zombie à l'id du zombie créé
         ownerZombieCount[msg.sender]++;//on incrémente le nombre de zombies pour l'adresse de celui qui vient de créer un nouveau zombie
         NewZombie(id, _name, _dna);
