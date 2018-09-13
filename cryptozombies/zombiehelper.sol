@@ -31,12 +31,12 @@ contract ZombieHelper is ZombieFeeding {
     }
 
     //on peut changer le nom de notre zombie s'il est au moins au level 2
-    function changeName(uint _zombieId, string _newName) external aboveLevel(2, _zombieId) ownerOf(_zombieId) {
+    function changeName(uint _zombieId, string _newName) external aboveLevel(2, _zombieId) onlyOwnerOf(_zombieId) {
         //require (msg.sender == zombieToOwner[_zombieId]); //le test est fait dans ownerOf
         zombies[_zombieId].name = _newName;
     }
     //on peut changer l'adn de notre zombie s'il est au moins au level 20
-    function changeDna(uint _zombieId, uint _newDna) external aboveLevel(20, _zombieId) ownerOf(_zombieId) {
+    function changeDna(uint _zombieId, uint _newDna) external aboveLevel(20, _zombieId) onlyOwnerOf(_zombieId) {
         //require (msg.sender == zombieToOwner[_zombieId]);//le test est fait dans ownerOf
         zombies[_zombieId].dna = _newDna;
     }

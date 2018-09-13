@@ -1,7 +1,24 @@
 # solidity
 solidity and blockchain tests
 
- une fois que vous avez déployé un contrat Ethereum, il est immuable, ce qui veut dire qu'il ne pourra plus jamais être modifié ou mis à jour.
+Je voudrais tous vous
+remercier d'avoir pris le temps de faire ce cours de programmation.
+Je sais que c'est accessible gratuitement, et ça le restera toujours,
+mais nous avons quand même mis toute notre énergie pour que ce cours
+soit le meilleur possible.
+
+Nous en sommes simplement au début de la programmation sur Blockchain.
+Nous avons déjà bien avancé, mais il y a tellement de façon de rendre
+cette communauté meilleure. Si nous avons fait une erreur quelque part,
+vous pouvez nous aider avec une pull request ici :
+https://github.com/loomnetwork/cryptozombie-lessons
+
+Ou si vous avez des idées, commentaires, ou si vous voulez
+tout simplement dire bonjour - rejoignez-nous sur notre communauté
+Telegram à https://t.me/loomnetwork
+
+
+une fois que vous avez déployé un contrat Ethereum, il est immuable, ce qui veut dire qu'il ne pourra plus jamais être modifié ou mis à jour.
 
 Le code que vous allez déployer initialement pour un contrat restera de manière permanente sur la blockchain. C'est pour cela que la sécurité est une préoccupation si importante en Solidity. S'il y a une faille dans le code de votre contrat, il n'y aucun moyen pour vous de le patcher plus tard. Vous devrez dire à vos utilisateurs d'utiliser une adresse de contrat différente qui a le correctif.
 
@@ -189,7 +206,31 @@ de quelle manière le modifier va affecter une fonction
 Le modificateur payable
 Une des choses qui rend Solidity et Ethereum vraiment cool est le modificateur payable, une fonction payable est une fonction spéciale qui peut recevoir des Ether.
 
-Réfléchissons une minute. Quand vous faites un appel à une fonction API sur un serveur normal, vous ne pouvez pas envoyer des dollars US en même temps - pas plus que des Bitcoin.
+Réfléchissons une minute. Quand vous faC'est particulièrement une bonne habitude de commenter son code pour expliquer le comportement attendu de chaque fonction de votre contrat. De cette manière, un autre développeur (ou vous, après 6 mois loin de votre projet !) peut parcourir votre code pour avoir une compréhension rapide du fonctionnement sans avoir à lire le code en détail.
+
+Le standard dans la communauté Solidity est d'utiliser un format appelé natspec, qui ressemble à ça :
+
+/// @title Un contrat pour des opérations mathématiques basiques
+/// @author H4XF13LD MORRIS 💯💯😎💯💯
+/// @notice Pour l'instant, ce contrat rajouter simplement une fonction multiplication
+contract Math {
+  /// @notice Multiplie 2 nombres ensemble
+  /// @param x le premier uint.
+  /// @param y le deuxième uint.
+  /// @return z le résultat de (x * y)
+  /// @dev Cette fonction ne vérifie pas les débordement pour l'instant
+  function multiply(uint x, uint y) returns (uint z) {
+    // C'est un commentaire normal, qui ne sera pas pris en compte par natspec
+    z = x * y;
+  }
+}
+@title (titre) and @author (auteur) sont plutôt évidents.
+
+@notice explique à un utilisateur ce que le contrat / fonction fait. @dev est pour donner plus de détails aux développeurs.
+
+@param et @return servent à décrire chaque paramètres et ce que la fonction renvoie.
+
+Vous n'avez pas tout le temps besoin d'utiliser tous ces tags pour chaque fonction — tous les tags sont optionnels. Au minimum, laissez une note @dev pour expliquer ce que chaque fonction fait.ites un appel à une fonction API sur un serveur normal, vous ne pouvez pas envoyer des dollars US en même temps - pas plus que des Bitcoin.
 
 Mais en Ethereum, puisque la monnaie (Ether), les données (charge utile de la transaction) et le code du contrat lui-même sont directement sur Ethereum, il est possible pour vous d'appeler une fonction et de payer le contrat en même temps.
 
@@ -273,3 +314,113 @@ Même si cette fonction aléatoire N'EST PAS sécurisée sur Ethereum, en pratiq
 Puisque nous construisons simplement un jeu à des fin de démonstration dans ce tutoriel, et qu'il n'y a pas vraiment d'argent en jeu, nous allons accepter les compromis d'utiliser un générateur de nombre aléatoire simple à implémenter, sachant qu'il n'est pas totalement sûr.
 
 Dans une prochaine leçon, il se peut que nous voyons comment utiliser des oracles (un moyen sécurisé de récupérer des données en dehors d'Ethereum) pour générer une fonction aléatoire depuis l'extérieur de la blockchain.
+
+
+un token Ethereum est un smart contract qui suit un ensemble de règles - à savoir, il implémente un ensemble de fonctions standards que tous les autres contrats de token partagent, comme transfer(address _to, uint256 _value) et balanceOf(address _owner).
+
+Le smart contract a habituellement un mappage interne, mapping(address => uint256) balances, qui permet de connaître la balance de chaque adresse.
+
+Un token est simplement un contrat qui permet de connaître combien de ce token chaque personne possède, et qui a certaines fonctions pour permettre aux utilisateurs de transférer leurs tokens à d'autres adresses.
+
+Puisque tous les tokens ERC20 partagent le même ensemble de fonctions avec les mêmes noms, ils peuvent tous être manipulés de la même manière.
+
+Cela veut dire que si vous construisez une application qui est capable d'interagir avec un token ERC20, elle sera aussi capable d'interagir avec n'importe quel token ERC20. De cette manière, d'autres tokens pourrons facilement être ajoutés à votre application sans avoir besoin de personnaliser le code. Vous pourrez simplement rajouter la nouvelle adresse du contrat du token, et boom, votre application pourra utiliser un nouveau token.
+
+On pourrait prendre comme exemple un échange. Quand un échange ajoute un nouveau token ERC20, en vérité il a juste besoin d'ajouter un nouveau smart contract. Les utilisateurs pourront utiliser ce contrat pour envoyer des tokens sur l'adresse de l'échange, et l'échange pourra utiliser ce contrat pour renvoyer des tokens aux utilisateurs quand ils voudront retirer.
+
+L'échange a simplement besoin d'implémenter une fois la logique de transfert, et quand il veut ajouter un nouveau token ERC20, il suffit simplement d'ajouter l'adresse du nouveau contrat à sa base de donnée.
+
+Les tokens ERC20 sont vraiment pratiques pour servir en temps que monnaies
+
+Il existe un autre standard de token qui est beaucoup plus adapté pour les crypto-collectibles comme CryptoZombies — ce sont les tokens ERC721.
+Les tokens ERC721 ne sont pas interchangeable puisqu'ils sont supposés être unique, et ne sont pas divisibles. Vous pouvez seulement les échanger en entier, et ils ont chacun un ID unique. C'est exactement cela que l'on veut pour rendre nos zombies échangeables.
+
+Remarque : En utilisant un standard comme ERC721, nous n'avons pas besoin d'implémenter les logiques qui définissent comment les joueurs vont échanger / vendre les zombies. Si on respecter les spécifications, quelqu'un d'autre pourrait construire une plateforme d'échange pour les actifs crypto-échangeables, et nos zombies ERC721 seraient compatibles avec cette plateforme. C'est un avantage évident d'utiliser un standard de token au lieu d'implémenter sa propre logique d'échange.
+
+Regardons de plus près le standard ERC721 :
+
+contract ERC721 {
+  event Transfer(address indexed _from, address indexed _to, uint256 _tokenId);
+  event Approval(address indexed _owner, address indexed _approved, uint256 _tokenId);
+
+  function balanceOf(address _owner) public view returns (uint256 _balance);
+  function ownerOf(uint256 _tokenId) public view returns (address _owner);
+  function transfer(address _to, uint256 _tokenId) public;
+  function approve(address _to, uint256 _tokenId) public;
+  function takeOwnership(uint256 _tokenId) public;
+}
+
+Remarque : Le standard ERC721 est actuellement une ébauche, et il n'y a pas d'implémentation officiellement convenue. Pour ce tutoriel nous allons utiliser la version actuelle de la bibliothèque OpenZeppelin, mais il est possible que cela change dans le futur avant une sortie officielle. C'est donc une implémentation possible, mais ce n'est pas le standard officiel pour les tokens ERC721.
+
+Implémenter le contrat d'un token
+Quand on implémente le contrat d'un token, la première chose à faire et de copier l'interface dans son propre fichier Solidity et d'importer avec import "./erc721.sol";. Ensuite notre contrat doit en hériter, et nous pouvons réécrire chaque méthode avec une définition de fonction.
+
+Garder en tête que c'était une implémentation minimale. Il y a d'autres fonctionnalités que nous voudrions ajouter à notre implémentation, comme s'assurer que les utilisateurs ne transfèrent pas accidentellement leurs zombies à l'adresse 0 (on appelle ça brûler un token - l'envoyer à une adresse dont personne n'a la clé privée, le rendant irrécupérable). Ou rajouter une logique d'enchère sur notre DApp. 
+Si vous voulez voir un exemple d'une implémentation plus détaillée, vous pouvez regarder le contrat ERC721 d'OpenZeppelin après ce tutoriel
+
+Amélioration de la sécurité des contrats : débordements par le haut et par le bas
+Nous allons voir une fonctionnalité de sécurité majeure à prendre en compte quand vous écrivez des smart contracts : Prévenir les débordements.
+
+C'est quoi un débordement ?
+
+Imaginez un uint8, qui peut seulement avoir 8 bits. Ce qui veut dire que le binaire du plus grand nombre que l'on peut stocker est 11111111 (ou en décimal, 2^8 -1 = 255).
+
+Regardez le code suivant. A quoi est égal number à la fin ?
+
+uint8 number = 255;
+number++;
+Dans ce cas, nous avons causé un débordement par le haut - number est contre-intuitivement égal à 0 maintenant, même si on l'a augmenté. (Si vous ajoutez 1 au binaire 1111111, il repart à 00000000, comme une horloge qui passe de 23:59 à 00:00).
+
+Un débordement par le bas est similaire, si vous soustrayez 1 d'un uint8 égal 0, le résultat sera 255 (car les uint sont non signés et ne peuvent pas être négatifs).
+
+Nous n'utilisons pas de uint8 ici, et il paraît peut probable qu'un uint256 débordera avec des incrémentations de 1 par 1 (2^256 est un nombre très grand), mais c'est toujours bon de protéger notre contrat afin que notre DApp n'est pas des comportements inattendus dans le futur.
+
+Utiliser SafeMath
+Pour prévenir cela, OpenZeppelin a créé une bibliothèque appelée SafeMath qui empêche ces problèmes.
+
+Mais d'abord, c'est quoi une bibliothèque ?
+
+Une bibliothèque est un type de contrat spécial en Solidity. Une de leurs fonctionnalités est que cela permet de rajouter des fonctions à un type de donnée native.
+
+Par exemple. avec la bibliothèque SafeMath, nous allons utiliser la syntaxe using SafeMath for uint256. La bibliothèque SafeMath à 4 fonctions — add, sub, mul, et div. Et maintenant nous pouvons utiliser ces fonctions à partir d'un uint256 en faisant :
+
+using SafeMath for uint256;
+
+uint256 a = 5;
+uint256 b = a.add(3); // 5 + 3 = 8
+uint256 c = a.mul(2); // 5 * 2 = 10
+
+ le mot-clé library (bibliothèque) - les bibliothèques sont similaires aux contrats avec quelques différences. Dans ce cas là, les bibliothèques nous permettent d'utiliser le mot-clé using (utiliser), qui va automatiquement rajouter toutes les méthodes de cette bibliothèque à un autre type de donnée 
+
+ Vous remarquerez que mul et add ont chacune besoin de 2 arguments, mais quand on déclare using SafeMath for uint, le uint qui appelle la fonction (test) est automatiquement passé comme premier argument.
+
+ add ajoute simplement 2 uint comme +, mais elle contient aussi une déclaration assert (affirme) pour vérifier que la somme est plus grande que a. Cela nous protège d'un débordement.
+
+ assert est la même chose que require, et va renvoyer une erreur si ce n'est pas vérifié. La différence entre assert et require c'est que require va rembourser l'utilisateur du gas restant quand la fonction échoue, alors que assert non. La plupart du temps vous allez vouloir utiliser require dans votre code, assert est plutôt utilisé quand quelque chose a vraiment mal tourné avec le code (comme un débordement d'uint).
+
+
+C'est particulièrement une bonne habitude de commenter son code pour expliquer le comportement attendu de chaque fonction de votre contrat. De cette manière, un autre développeur (ou vous, après 6 mois loin de votre projet !) peut parcourir votre code pour avoir une compréhension rapide du fonctionnement sans avoir à lire le code en détail.
+
+Le standard dans la communauté Solidity est d'utiliser un format appelé natspec, qui ressemble à ça :
+
+/// @title Un contrat pour des opérations mathématiques basiques
+/// @author H4XF13LD MORRIS 💯💯😎💯💯
+/// @notice Pour l'instant, ce contrat rajouter simplement une fonction multiplication
+contract Math {
+  /// @notice Multiplie 2 nombres ensemble
+  /// @param x le premier uint.
+  /// @param y le deuxième uint.
+  /// @return z le résultat de (x * y)
+  /// @dev Cette fonction ne vérifie pas les débordement pour l'instant
+  function multiply(uint x, uint y) returns (uint z) {
+    // C'est un commentaire normal, qui ne sera pas pris en compte par natspec
+    z = x * y;
+  }
+}
+@title (titre) and @author (auteur) sont plutôt évidents.
+
+@notice explique à un utilisateur ce que le contrat / fonction fait. @dev est pour donner plus de détails aux développeurs.
+
+@param et @return servent à décrire chaque paramètres et ce que la fonction renvoie.
+
+Vous n'avez pas tout le temps besoin d'utiliser tous ces tags pour chaque fonction — tous les tags sont optionnels. Au minimum, laissez une note @dev pour expliquer ce que chaque fonction fait.

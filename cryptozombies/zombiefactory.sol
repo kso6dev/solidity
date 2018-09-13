@@ -4,9 +4,14 @@ pragma solidity ^0.4.17;
 //https://share.cryptozombies.io/fr/lesson/1/share/soseji
 
 import "./ownable.sol";
+import "./safemath.sol";
 
 //un contrat est situé dans une blockchain et ses fonctions peuvent être appelées par un user qui possède une adresse (wallet)
 contract ZombieFactory is Ownable{
+    
+    using SafeMath for uint256;//permet d'utiliser la bibliothèque SafeMath pour les uint
+    using SafeMath32 for uint32;
+    using SafeMath16 for uint16;
 
     event NewZombie(uint zombieId, string name, uint dna);//event auquel on pourra s'abonner côté front end
 
@@ -62,7 +67,8 @@ contract ZombieFactory is Ownable{
         pour utiliser le zombie à nouveau.
         */
         zombieToOwner[id] = msg.sender;//on met à jour le mapping zombieToWoner pour associer l'adresse de celui qui créé le zombie à l'id du zombie créé
-        ownerZombieCount[msg.sender]++;//on incrémente le nombre de zombies pour l'adresse de celui qui vient de créer un nouveau zombie
+        //ownerZombieCount[msg.sender]++;//on incrémente le nombre de zombies pour l'adresse de celui qui vient de créer un nouveau zombie
+        ownerZombieCount[msg.sender] = ownerZombieCount[msg.sender].add(1);//mais on le fait via SafeMath!
         NewZombie(id, _name, _dna);
     }
 
