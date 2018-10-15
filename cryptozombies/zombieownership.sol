@@ -3,11 +3,13 @@ pragma solidity ^0.4.17;
 import "./zombieattack.sol";
 import "./erc721.sol";
 
-//c'est ici que nous allons stocker la logique ERC721
+//mon armée:
+//https://share.cryptozombies.io/fr/lesson/5/share/kaiser?id=YXV0aDB8NWI5N2QwZjU4ZWMyMjc0NjcxOGJiNjZi
 
 /// @title Un contrat qui permet de gère le transfère de propriété d'un zombie
 /// @author k.so.6.dev
 /// @notice Conforme aux spécificités provisoires de l'implémentation ERC721 d'OpenZeppelin
+/// @dev c'est ici que nous allons stocker la logique ERC721
 contract ZombieOwnerShip is ZombieBattle, ERC721 {
 
     mapping (uint => address) zombieApprovals;//permet de stocker quelle adresse est approuvée pour prendre un token (tokenId)  
